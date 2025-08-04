@@ -8,19 +8,33 @@ export EDITOR='nvim'
 export VISUAL='nvim'
 export PATH="$HOME/.local/bin:$PATH"
 
-# Define a smart 'open' command for lf
-export open='
-case "$f" in
-  *.mp4|*.mkv|*.webm) mpv "$f" ;;
-  *.pdf) zathura "$f" ;;
-  *.md|*.txt|*.conf|*.sh|*.json) nvim "$f" ;;
-  *) xdg-open "$f" ;;
-esac
-'
+# Define a smart 'open' command, adapting for headless environments
+if [ -f "$HOME/.dark_terminal_headless" ]; then
+  # On a server, 'open' uses only text-based tools
+  export open='
+  case "$f" in
+    *.md|*.txt|*.conf|*.sh|*.json|*.log|*.yml|*.toml) nvim "$f" ;;
+    *) less "$f" ;;
+  esac
+  '
+else
+  # On a desktop, 'open' can use GUI applications
+  export open='
+  case "$f" in
+    *.mp4|*.mkv|*.webm) mpv "$f" ;;
+    *.pdf) zathura "$f" ;;
+    *.md|*.txt|*.conf|*.sh|*.json) nvim "$f" ;;
+    *) xdg-open "$f" ;;
+  esac
+  '
+fi
 
 # ------------------------------------------------------------------------------
 # GENERAL ALIASES
+# (The rest of the file remains the same)
+# ...
 # ------------------------------------------------------------------------------
+# (The existing content of aliases.sh from here on)
 # Navigation
 alias ..="cd .."
 alias ...="cd ../.."

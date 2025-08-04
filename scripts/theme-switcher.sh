@@ -34,9 +34,11 @@ apply_theme() {
 
     info "Applying $theme_name theme..."
 
-    # 1. Update kitty.conf
-    sed -i "/# --- Theme/c\# --- Theme ($theme_name) ---" "$KITTY_CONFIG"
-    sed -i "/# Polar Night/,/# Aurora/c\\$kitty_palette" "$KITTY_CONFIG"
+    # 1. Update kitty.conf if it exists
+    if [ -f "$KITTY_CONFIG" ]; then
+        sed -i "/# --- Theme/c\# --- Theme ($theme_name) ---" "$KITTY_CONFIG"
+        sed -i "/# Polar Night/,/# Aurora/c\\$kitty_palette" "$KITTY_CONFIG"
+    fi
     
     # 2. Update tmux.conf
     # We use @ as a sed delimiter because the replacement string contains slashes

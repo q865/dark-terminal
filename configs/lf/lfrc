@@ -17,10 +17,11 @@ set icons true
 set hidden true
 set preview true
 
-# The previewer script from the project is known to work well.
-# It's located in the scripts directory.
-# We use a relative path from the config directory.
-set previewer ../scripts/preview.sh
+# Source a local, potentially user-defined, configuration file if it exists.
+# The install script will create this file in headless mode to disable previews.
+if [ -f "$HOME/.config/lf/localrc" ]; then
+    source "$HOME/.config/lf/localrc"
+fi
 
 # Custom keybinding for fzf file search inside lf
 map <c-f> $sh -c '/home/panch/dev_projects/dark-terminal/scripts/fzf-launcher.sh files'
