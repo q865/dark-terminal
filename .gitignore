@@ -1,0 +1,10 @@
+# Backup files created by the install script
+*.bak_*
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# IDE/Editor specific files
+.vscode/
+.idea/

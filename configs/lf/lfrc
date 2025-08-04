@@ -1,0 +1,23 @@
+# This is a minimal lfrc configuration.
+
+# --- Mappings ---
+# Default navigation keys (h, j, k, l) work out of the box for navigation.
+# 'l' or <enter> on a directory will enter it.
+# 'l' or <enter> on a file will try to open it.
+
+# Use 'e' to explicitly open a file for editing.
+# We force shell execution to ensure $EDITOR is respected.
+map e $sh -c '$EDITOR "$1"' -- $f
+
+# Use 'o' for 'open', which can be configured with 'rifle' or xdg-open.
+map o $open $f
+
+# --- Settings ---
+set icons true
+set hidden true
+set preview true
+
+# The previewer script from the project is known to work well.
+# It's located in the scripts directory.
+# We use a relative path from the config directory.
+set previewer ../scripts/preview.sh
