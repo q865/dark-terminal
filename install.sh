@@ -145,10 +145,7 @@ install_packages() {
         fi
     }
     fi
-    info "Dependencies installation process finished."
 }
-
-setup_zsh() {
     if [ ! -d "$HOME/.oh-my-zsh" ]; then
         info "Oh My Zsh not found. Installing..."
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
