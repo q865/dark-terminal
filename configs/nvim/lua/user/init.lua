@@ -22,8 +22,9 @@ return {
   -- Configure plugins
   plugins = {
     init = {
-      -- Add the Nord theme plugin
+      -- THEME_PLUGIN_START
       { "shaunsingh/nord.nvim" },
+      -- THEME_PLUGIN_END
 
       -- You can disable default plugins as follows:
       -- ["goolord/alpha-nvim"] = { disable = true },
