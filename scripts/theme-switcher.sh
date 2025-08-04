@@ -106,8 +106,24 @@ main() {
     esac
 
     info "Theme changed. Please restart kitty and run 'tmux source-file ~/.config/tmux/tmux.conf' for changes to take full effect."
-    info "For Neovim, run :PackerSync or :Lazy sync after launching to install the new theme plugin if needed."
+    
+    # Automatically sync nvim plugins
+    sync_nvim_plugins
 }
 
-main "$@"
-exit 0
+# --- Neovim Plugin Sync Function ---
+sync_nvim_plugins() {
+    info "Attempting to sync Neovim plugins automatically..."
+    if command -v nvim &> /dev/null; then
+        # Run nvim in the background to sync plugins and then quit.
+        # This ensures the user doesn't have to do it manually.
+        nvim --headless "+Lazy! sync" +qa &> /dev/null &
+        info "Neovim plugin sync started in the background. It may take a moment."
+    else
+        warn "Neovim is not in PATH. Please sync plugins manually by running :Lazy in nvim."
+    fi
+}
+
+# --- Main Logic ---
+main() {
+    if [ -z "$1" ]; then
