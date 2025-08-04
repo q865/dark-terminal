@@ -27,11 +27,10 @@ find_files() {
     fi
 }
 
-# Find and switch to a project directory
+# Find and switch to a project directory, creating a tmux session if needed.
 find_projects() {
     local existing_dirs=()
     for dir in $PROJECT_DIRS; do
-        # Expand tilde manually
         dir="${dir/#\~/$HOME}"
         if [ -d "$dir" ]; then
             existing_dirs+=("$dir")
@@ -45,16 +44,29 @@ find_projects() {
     fi
 
     local selected_dir
-    # Scan existing project directories up to a depth of 2, ignoring errors
-    selected_dir=$(find "${existing_dirs[@]}" -maxdepth 2 -type d -name ".git" 2>/dev/null | sed 's#/\.git##' | fzf-tmux -p 80%,60%)
+    selected_dir=$(find "${existing_dirs[@]}" -maxdepth 2 -type d -name ".git" 2>/dev/null | sed 's#/\.git##' | fzf-tmux -p 80%,60% --prompt="Switch to project: ")
 
     if [[ -n "$selected_dir" ]]; then
-        local session_name=$(basename "$selected_dir" | tr . _)
-        if tmux has-session -t=$session_name 2>/dev/null; then
-            tmux switch-client -t $session_name
+        local session_name=$(basename "$selected_dir" | tr '.-' '_')
+        
+        # Check if we are inside a tmux session
+        if [ -n "$TMUX" ]; then
+            # We are inside tmux
+            if ! tmux has-session -t="$session_name" 2>/dev/null; then
+                # Session doesn't exist, create it detached
+                tmux new-session -d -s "$session_name" -c "$selected_dir"
+            fi
+            # Switch to the session
+            tmux switch-client -t "$session_name"
         else
-            tmux new-session -d -s $session_name -c "$selected_dir"
-            tmux switch-client -t $session_name
+            # We are not inside tmux
+            if ! tmux has-session -t="$session_name" 2>/dev/null; then
+                # Session doesn't exist, create it and attach
+                tmux new-session -s "$session_name" -c "$selected_dir"
+            else
+                # Session exists, attach to it
+                tmux attach-session -t "$session_name"
+            fi
         fi
     fi
 }
