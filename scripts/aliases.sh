@@ -119,7 +119,7 @@ alias glg='git log --graph --oneline --decorate --all'
 # FUNCTIONS & FZF BINDINGS
 # ------------------------------------------------------------------------------
 # lf - file manager wrapper to cd on exit
-lf () {
+f () {
     tmp="$(mktemp)"
     command lf -last-dir-path="$tmp" "$@"
     if [ -f "$tmp" ]; then
@@ -131,12 +131,8 @@ lf () {
     fi
 }
 
-# Get the directory of the currently running script, compatible with Bash and Zsh
-if [ -n "$ZSH_VERSION" ]; then
-    SCRIPT_DIR=${${(%):-%x}:h}
-else
-    SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-fi
+# Get the directory of the currently running script using the environment variable
+SCRIPT_DIR="$DARK_TERMINAL_HOME/scripts"
 FZF_LAUNCHER_PATH="$SCRIPT_DIR/fzf-launcher.sh"
 
 # Use bat for fzf previews, but only if the target is a file

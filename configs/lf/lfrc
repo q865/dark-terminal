@@ -24,4 +24,4 @@ if [ -f "$HOME/.config/lf/localrc" ]; then
 fi
 
 # Custom keybinding for fzf file search inside lf
-map <c-f> $sh -c '/home/panch/dev_projects/dark-terminal/scripts/fzf-launcher.sh files'
+map <c-f> $sh -c '$DARK_TERMINAL_HOME/scripts/fzf-launcher.sh files'

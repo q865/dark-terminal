@@ -186,10 +186,14 @@ setup_astronvim() {
 source_aliases() {
     local zshrc_path="$1"
     info "Adding alias source to shell configuration..."
-    local ALIASES_PATH="$(pwd)/scripts/aliases.sh"
-    if ! grep -q "dark-terminal aliases" "$zshrc_path"; then
-        info "Adding alias source to $zshrc_path"
-        echo -e "\n# Load dark-terminal aliases and functions\nsource '$ALIASES_PATH'" >> "$zshrc_path"
+    # Define a portable environment variable for the project root
+    local project_home="$(pwd)"
+    
+    if ! grep -q "DARK_TERMINAL_HOME" "$zshrc_path"; then
+        info "Adding DARK_TERMINAL_HOME to $zshrc_path"
+        echo -e "\n# Define dark-terminal home for portability" >> "$zshrc_path"
+        echo "export DARK_TERMINAL_HOME=\"$project_home\"" >> "$zshrc_path"
+        echo "source \"\$DARK_TERMINAL_HOME/scripts/aliases.sh\"" >> "$zshrc_path"
     fi
 }
 
