@@ -6,8 +6,8 @@
 # 'l' or <enter> on a file will try to open it.
 
 # Use 'e' to explicitly open a file for editing.
-# We force shell execution to ensure $EDITOR is respected.
-map e $sh -c '$EDITOR "$1"' -- $f
+# Forcing shell execution with a hardcoded path to ensure it always works.
+map e $sh -c '/usr/bin/nvim "$1"' -- $f
 
 # Use 'o' for 'open', which can be configured with 'rifle' or xdg-open.
 map o $open $f
@@ -21,3 +21,6 @@ set preview true
 # It's located in the scripts directory.
 # We use a relative path from the config directory.
 set previewer ../scripts/preview.sh
+
+# Custom keybinding for fzf file search inside lf
+map <c-f> $sh -c '/home/panch/dev_projects/dark-terminal/scripts/fzf-launcher.sh files'

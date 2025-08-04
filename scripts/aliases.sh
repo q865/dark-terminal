@@ -1,83 +1,126 @@
 #!/bin/bash
-# This script contains aliases and functions to be sourced by your shell (.bashrc, .zshrc)
+# This script contains all aliases and functions to be sourced by your shell.
 
+# ------------------------------------------------------------------------------
+# ENVIRONMENT & EDITOR
+# ------------------------------------------------------------------------------
 export EDITOR='nvim'
+export VISUAL='nvim'
+export PATH="$HOME/.local/bin:$PATH"
 
-# --- Navigation ---
+# Define a smart 'open' command for lf
+export open='
+case "$f" in
+  *.mp4|*.mkv|*.webm) mpv "$f" ;;
+  *.pdf) zathura "$f" ;;
+  *.md|*.txt|*.conf|*.sh|*.json) nvim "$f" ;;
+  *) xdg-open "$f" ;;
+esac
+'
+
+# ------------------------------------------------------------------------------
+# GENERAL ALIASES
+# ------------------------------------------------------------------------------
+# Navigation
 alias ..="cd .."
 alias ...="cd ../.."
 alias ....="cd ../../.."
 
-# --- Listing files ---
-# Always use colors
-alias ls='ls --color=auto'
-alias grep='grep --color=auto'
-alias egrep='egrep --color=auto'
-alias fgrep='fgrep --color=auto'
-
-# Long format, human-readable sizes, all files
-alias ll='ls -alhF'
-# List all files
-alias la='ls -A'
-# List only files
-alias l='ls -CF'
-
-# --- Application Aliases ---
-alias v='nvim'
-alias vim='nvim'
-alias tm='tmux'
-alias l='lf'
-
-# --- System ---
-# Update system packages
-if [ -f /etc/arch-release ]; then
-    alias update='sudo pacman -Syu'
-elif [ -f /etc/debian_version ]; then
-    alias update='sudo apt-get update && sudo apt-get upgrade -y'
+# Listing files (using eza if available, otherwise ls)
+if command -v eza &> /dev/null; then
+    alias ls='eza --icons --group-directories-first'
+    alias ll='eza -l --icons --group-directories-first'
+    alias la='eza -la --icons --group-directories-first'
+else
+    alias ls='ls --color=auto'
+    alias ll='ls -alhF'
+    alias la='ls -A'
 fi
 
-# Cleanup (e.g., pacman cache or apt autoremove)
+# Other
+alias cat='bat --paging=never'
+alias vim='nvim'
+alias vi='nvim'
+alias tm='tmux'
+alias lg='lazygit'
+alias pingg='ping 8.8.8.8'
+alias myip='curl ifconfig.me'
+
+# ------------------------------------------------------------------------------
+# APPLICATION ALIASES
+# ------------------------------------------------------------------------------
+# Zellij
+alias zl="zellij --layout dev-setup"
+alias za="zellij attach"
+alias zs="zellij list-sessions"
+alias zk="zellij kill-all-sessions"
+
+# Custom Scripts
+alias promptgen="bash ~/.local/bin/prompter.sh"
+alias soundcloud-dl="/home/panch/dev_projects/my_sound-cloud/.venv/bin/python /home/panch/dev_projects/my_sound-cloud/soundcloud_downloader.py"
+
+# ------------------------------------------------------------------------------
+# SYSTEM ALIASES
+# ------------------------------------------------------------------------------
+# Update system packages
 if [ -f /etc/arch-release ]; then
-    alias cleanup='sudo pacman -Rns $(pacman -Qtdq)'
+    alias update='yay -Syu'
+    alias cleanup='sudo pacman -Sc'
 elif [ -f /etc/debian_version ]; then
+    alias update='sudo apt-get update && sudo apt-get upgrade -y'
     alias cleanup='sudo apt-get autoremove -y && sudo apt-get clean'
 fi
 
-# --- Git Aliases ---
+# ------------------------------------------------------------------------------
+# GIT ALIASES
+# ------------------------------------------------------------------------------
 alias g='git'
+alias gs='git status'
 alias ga='git add'
 alias gaa='git add --all'
 alias gc='git commit -m'
-alias gca='git commit -am'
-alias gs='git status'
+alias gca='git commit -a -m'
 alias gp='git push'
-alias gpull='git pull'
-alias gl='git log --oneline --graph --decorate'
-alias gb='git branch'
+alias gpl='git pull'
 alias gco='git checkout'
-alias gd='git diff'
+alias gb='git branch'
+alias glg='git log --graph --oneline --decorate --all'
 
-# --- Other ---
-alias pingg='ping 8.8.8.8' # Ping Google
-alias myip='curl ifconfig.me'
+# ------------------------------------------------------------------------------
+# FUNCTIONS & FZF BINDINGS
+# ------------------------------------------------------------------------------
+# lf - file manager wrapper to cd on exit
+lf () {
+    tmp="$(mktemp)"
+    command lf -last-dir-path="$tmp" "$@"
+    if [ -f "$tmp" ]; then
+        dir="$(cat "$tmp")"
+        rm -f "$tmp"
+        if [ -d "$dir" ] && [ "$dir" != "$(pwd)" ]; then
+            cd "$dir"
+        fi
+    fi
+}
 
-# --- fzf keybindings ---
+# fzf keybindings
 # Get the directory of the currently running script
 FZF_LAUNCHER_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )/fzf-launcher.sh"
 
-if [ -n "$ZSH_VERSION" ]; then
-    # Zsh bindings
-    bindkey -s '^f' "source $FZF_LAUNCHER_PATH files\n"
-    bindkey -s '^p' "source $FZF_LAUNCHER_PATH projects\n"
-    # Ctrl+r is usually reverse-history-search, fzf overrides this by default
-    # If fzf is installed with shell integration, this is often handled automatically.
-    # We can add it manually if needed.
-elif [ -n "$BASH_VERSION" ]; then
-    # Bash bindings
-    bind -x '"\C-f": "source $FZF_LAUNCHER_PATH files"'
-    bind -x '"\C-p": "source $FZF_LAUNCHER_PATH projects"'
+# Use bat for fzf previews
+if command -v bat &> /dev/null; then
+  export FZF_DEFAULT_OPTS="--preview 'bat --color=always --style=numbers --line-range=:500 {}'"
 fi
 
+# Custom keybindings for fzf
+# We use this method to avoid conflicts with the default fzf setup
+if [ -n "$ZSH_VERSION" ]; then
+    # Zsh bindings
+    bindkey '^f' fzf-file-widget
+    bindkey '^p' fzf-cd-widget
+elif [ -n "$BASH_VERSION" ]; then
+    # Bash bindings
+    bind -x '"\C-f": "$FZF_LAUNCHER_PATH files"'
+    bind -x '"\C-p": "$FZF_LAUNCHER_PATH projects"'
+fi
 
-echo "dark-terminal aliases loaded."
-
+echo "dark-terminal aliases and functions loaded."

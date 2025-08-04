@@ -1,18 +1,10 @@
 -- You can add your own custom AstroNvim settings here
--- For example:
--- return {
---   "catppuccin/nvim",
---   name = "catppuccin",
---   opts = {
---     flavour = "macchiato",
---   },
--- }
---
--- For more information, see: https://astronvim.com/configuration/user_config
 return {
+  -- Set a colorscheme
+  colorscheme = "nord",
+
   -- AstroNvim uses mason-lspconfig to manage servers, so we can configure it here
   lsp = {
-    -- enable servers that you already have installed on your system
     servers = {
       "bashls",
       "cssls",
@@ -26,26 +18,15 @@ return {
       "vimls",
     },
   },
+
   -- Configure plugins
   plugins = {
     init = {
+      -- Add the Nord theme plugin
+      { "shaunsingh/nord.nvim" },
+
       -- You can disable default plugins as follows:
       -- ["goolord/alpha-nvim"] = { disable = true },
-      --
-      -- You can also add new plugins here as well:
-      -- {
-      --   "andweeb/presence.nvim",
-      --   config = function()
-      --     require("presence"):setup {}
-      --   end,
-      -- },
-      -- {
-      --   "ray-x/lsp_signature.nvim",
-      --   event = "BufRead",
-      --   config = function()
-      --     require("lsp_signature").setup()
-      --   end,
-      -- },
     },
   },
 }

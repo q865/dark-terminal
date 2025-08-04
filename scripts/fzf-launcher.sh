@@ -14,7 +14,7 @@ find_files() {
     # Use fd if available, otherwise fallback to find
     local file
     if command -v fd >/dev/null 2>&1; then
-        file=$(fd --type f --hidden --exclude .git . '`' | fzf-tmux -p 80%,60% -- --preview 'bat --color=always --style=numbers {}')
+        file=$(fd --type f --hidden --exclude .git . | fzf-tmux -p 80%,60% -- --preview 'bat --color=always --style=numbers {}')
     else
         file=$(find . -type f -not -path '*/\.git/*' | fzf-tmux -p 80%,60% -- --preview 'bat --color=always --style=numbers {}')
     fi

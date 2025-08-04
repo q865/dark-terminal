@@ -1,0 +1,57 @@
+# ------------------------------------------------------------------------------
+# OH MY ZSH CONFIGURATION
+# ------------------------------------------------------------------------------
+# Path to your oh-my-zsh installation.
+export ZSH="$HOME/.oh-my-zsh"
+
+# We leave ZSH_THEME empty to allow starship to take control.
+ZSH_THEME=""
+
+# List of plugins
+plugins=(
+    git
+    vi-mode
+    zsh-autosuggestions
+    zsh-syntax-highlighting
+    zsh-completions
+    zsh-history-substring-search
+    fzf-tab # fzf-powered completions
+)
+
+# Load Oh My Zsh
+source $ZSH/oh-my-zsh.sh
+
+# ------------------------------------------------------------------------------
+# PROMPT & SHELL EXTENSIONS
+# ------------------------------------------------------------------------------
+# Starship - The cross-shell prompt
+eval "$(starship init zsh)"
+
+# zoxide - A smarter cd command
+if command -v zoxide &> /dev/null; then
+  eval "$(zoxide init zsh)"
+fi
+
+# direnv: per-project environments
+eval "$(direnv hook zsh)"
+
+# ------------------------------------------------------------------------------
+# AUTO-START & FINALIZATION
+# ------------------------------------------------------------------------------
+# NVM (Node Version Manager)
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+
+# Display system info on startup
+if command -v fastfetch &> /dev/null; then
+    fastfetch -s ascii
+fi
+
+# Source all secrets, aliases, and functions for dark-terminal
+if [[ -f ~/.zsh_secrets ]]; then
+  source ~/.zsh_secrets
+fi
+
+# Load dark-terminal aliases and functions
+source '/home/panch/dev_projects/dark-terminal/scripts/aliases.sh'
