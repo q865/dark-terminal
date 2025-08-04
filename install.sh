@@ -103,26 +103,49 @@ install_packages() {
             packages_to_install="$packages_to_install $desktop_packages"
         fi
         sudo pacman -Syu --noconfirm --needed $packages_to_install
-    elif [ "$pkg_manager" == "apt" ]; then
-        # Debian/Ubuntu requires more manual steps for some tools
+    elif [ "$pkg_manager" == "apt" ]; {
+        # Helper function for apt to install only if available
+        install_if_available() {
+            if apt-cache show "$1" &> /dev/null; then
+                info "Installing $1..."
+                sudo apt-get install -y "$1"
+            else
+                warn "Package '$1' not found in standard repositories. Skipping."
+            fi
+        }
+
+        # Install base packages that are always available
         sudo apt-get update
-        sudo apt-get install -y $base_packages zoxide direnv
+        sudo apt-get install -y $base_packages
         
+        # Install desktop packages if needed
         if [ "$headless_mode" = false ]; then
-            sudo apt-get install -y $desktop_packages
+            install_if_available $desktop_packages
         fi
         
-        info "Installing extra CLI tools for Debian-based system..."
-        # eza
-        sudo mkdir -p /etc/apt/keyrings
-        wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
-        echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" | sudo tee /etc/apt/sources.list.d/gierens.list
-        # starship
-        curl -sS https://starship.rs/install.sh | sh -s -- --yes
-        # fastfetch
-        sudo apt-get install -y fastfetch
+        # Install extra tools, checking for availability
+        info "Installing extra CLI tools..."
+        install_if_available "zoxide"
+        install_if_available "direnv"
+        install_if_available "fastfetch"
+        
+        # Eza and Starship often require manual installation steps on older systems
+        if ! command -v eza &> /dev/null; then
+            info "Attempting to install eza manually..."
+            sudo mkdir -p /etc/apt/keyrings
+            wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
+            echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" | sudo tee /etc/apt/sources.list.d/gierens.list
+            sudo apt-get update
+            install_if_available "eza"
+        fi
+        
+        if ! command -v starship &> /dev/null; then
+            info "Attempting to install starship manually..."
+            curl -sS https://starship.rs/install.sh | sh -s -- --yes
+        fi
+    }
     fi
-    info "Dependencies installed."
+    info "Dependencies installation process finished."
 }
 
 setup_zsh() {
