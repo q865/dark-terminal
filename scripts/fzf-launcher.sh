@@ -4,8 +4,8 @@
 
 # --- Configuration ---
 # Define directories to search for projects. Add your own here.
-# Default is ~/dev, ~/projects, ~/work
-PROJECT_DIRS="$HOME/dev $HOME/projects $HOME/work"
+# Default is ~/dev_projects, ~/dev, ~/projects, ~/work
+PROJECT_DIRS="$HOME/dev_projects $HOME/dev $HOME/projects $HOME/work"
 
 # --- Functions ---
 
@@ -13,10 +13,12 @@ PROJECT_DIRS="$HOME/dev $HOME/projects $HOME/work"
 find_files() {
     # Use fd if available, otherwise fallback to find
     local file
+    local preview_cmd="if [ -f {} ]; then bat --color=always --style=numbers --line-range=:500 {}; fi"
+
     if command -v fd >/dev/null 2>&1; then
-        file=$(fd --type f --hidden --exclude .git . | fzf-tmux -p 80%,60% -- --preview 'bat --color=always --style=numbers {}')
+        file=$(fd --type f --hidden --exclude .git . | fzf-tmux -p 80%,60% -- --preview "$preview_cmd")
     else
-        file=$(find . -type f -not -path '*/\.git/*' | fzf-tmux -p 80%,60% -- --preview 'bat --color=always --style=numbers {}')
+        file=$(find . -type f -not -path '*/\.git/*' | fzf-tmux -p 80%,60% -- --preview "$preview_cmd")
     fi
 
     if [[ -n "$file" ]]; then
@@ -27,12 +29,26 @@ find_files() {
 
 # Find and switch to a project directory
 find_projects() {
+    local existing_dirs=()
+    for dir in $PROJECT_DIRS; do
+        # Expand tilde manually
+        dir="${dir/#\~/$HOME}"
+        if [ -d "$dir" ]; then
+            existing_dirs+=("$dir")
+        fi
+    done
+
+    if [ ${#existing_dirs[@]} -eq 0 ]; then
+        echo "No project directories found in $PROJECT_DIRS. Please check the paths in fzf-launcher.sh" >&2
+        sleep 2
+        return
+    fi
+
     local selected_dir
-    # Scan project directories up to a depth of 2
-    selected_dir=$(find $PROJECT_DIRS -maxdepth 2 -type d -name ".git" | sed 's#/\.git##' | fzf-tmux -p 80%,60%)
+    # Scan existing project directories up to a depth of 2, ignoring errors
+    selected_dir=$(find "${existing_dirs[@]}" -maxdepth 2 -type d -name ".git" 2>/dev/null | sed 's#/\.git##' | fzf-tmux -p 80%,60%)
 
     if [[ -n "$selected_dir" ]]; then
-        # If in tmux, create a new session or switch to an existing one
         local session_name=$(basename "$selected_dir" | tr . _)
         if tmux has-session -t=$session_name 2>/dev/null; then
             tmux switch-client -t $session_name

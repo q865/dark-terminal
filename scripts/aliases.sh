@@ -116,23 +116,39 @@ lf () {
     fi
 }
 
-# fzf keybindings
-# Get the directory of the currently running script
-FZF_LAUNCHER_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )/fzf-launcher.sh"
+# Get the directory of the currently running script, compatible with Bash and Zsh
+if [ -n "$ZSH_VERSION" ]; then
+    SCRIPT_DIR=${${(%):-%x}:h}
+else
+    SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+fi
+FZF_LAUNCHER_PATH="$SCRIPT_DIR/fzf-launcher.sh"
 
-# Use bat for fzf previews
+# Use bat for fzf previews, but only if the target is a file
 if command -v bat &> /dev/null; then
-  export FZF_DEFAULT_OPTS="--preview 'bat --color=always --style=numbers --line-range=:500 {}'"
+  export FZF_DEFAULT_OPTS="--preview 'if [ -f {} ]; then bat --color=always --style=numbers --line-range=:500 {}; fi'"
 fi
 
-# Custom keybindings for fzf
-# We use this method to avoid conflicts with the default fzf setup
+# Custom keybindings for fzf, defined in a way that is safe for both Zsh and Bash
 if [ -n "$ZSH_VERSION" ]; then
-    # Zsh bindings
+    # Zsh: Define custom widgets and then bind keys to them.
+    fzf-file-widget() {
+        $FZF_LAUNCHER_PATH files
+        zle reset-prompt
+    }
+    zle -N fzf-file-widget
+
+    fzf-project-widget() {
+        $FZF_LAUNCHER_PATH projects
+        zle reset-prompt
+    }
+    zle -N fzf-project-widget
+
     bindkey '^f' fzf-file-widget
-    bindkey '^p' fzf-cd-widget
+    bindkey '^p' fzf-project-widget
+
 elif [ -n "$BASH_VERSION" ]; then
-    # Bash bindings
+    # Bash: Bind directly to the script execution.
     bind -x '"\C-f": "$FZF_LAUNCHER_PATH files"'
     bind -x '"\C-p": "$FZF_LAUNCHER_PATH projects"'
 fi
