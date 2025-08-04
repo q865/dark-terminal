@@ -55,7 +55,22 @@ fi
 alias cat='bat --paging=never'
 alias vim='nvim'
 alias vi='nvim'
-alias tm='tmux'
+# Smart function for tmux
+# Starts a new session with a standard layout if none exists, otherwise attaches.
+tm() {
+    # Check if tmux server is running
+    if ! tmux info &> /dev/null; then
+        # No server, start a new session and run the layout script
+        tmux start-server
+        tmux new-session -d -s "main" -c "$(pwd)"
+        bash "$SCRIPT_DIR/tmux-layout.sh"
+        tmux attach-session -t "main"
+    else
+        # Server is running, attach to the last active session
+        tmux attach-session
+    fi
+}
+
 alias lg='lazygit'
 alias pingg='ping 8.8.8.8'
 alias myip='curl ifconfig.me'
