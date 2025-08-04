@@ -30,10 +30,16 @@ main() {
     if [ -f /etc/arch-release ]; then
         info "Arch Linux detected."
         PKG_MANAGER="pacman"
-    elif [ -f /etc/debian_version ]; then
-        info "Debian/Ubuntu based system detected."
-        PKG_MANAGER="apt"
-    else
+    elif [ -f /etc/os-release ]; then
+        # Source the os-release file to get variables
+        . /etc/os-release
+        if [[ "$ID" == "ubuntu" || "$ID" == "debian" || "$ID_LIKE" == "debian" ]]; then
+            info "Debian/Ubuntu based system detected."
+            PKG_MANAGER="apt"
+        fi
+    fi
+
+    if [ -z "$PKG_MANAGER" ]; then
         error "Unsupported OS. This script supports Arch and Debian-based systems."
     fi
 
