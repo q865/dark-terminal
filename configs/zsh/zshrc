@@ -21,6 +21,10 @@ plugins=(
 # Load Oh My Zsh
 source $ZSH/oh-my-zsh.sh
 
+# Fix for Ctrl+C in vi-mode
+# This ensures Ctrl+C sends an interrupt signal instead of just exiting insert mode.
+bindkey -v '^C' .send-break
+
 # ------------------------------------------------------------------------------
 # PROMPT & SHELL EXTENSIONS
 # ------------------------------------------------------------------------------

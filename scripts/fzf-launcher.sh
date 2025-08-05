@@ -38,36 +38,42 @@ find_projects() {
     done
 
     if [ ${#existing_dirs[@]} -eq 0 ]; then
-        echo "No project directories found in $PROJECT_DIRS. Please check the paths in fzf-launcher.sh" >&2
-        sleep 2
-        return
+        echo "No project directories found. Please check PROJECT_DIRS in $0" >&2
+        return 1
     fi
 
-    local selected_dir
-    selected_dir=$(find "${existing_dirs[@]}" -maxdepth 2 -type d -name ".git" 2>/dev/null | sed 's#/\.git##' | fzf-tmux -p 80%,60% --prompt="Switch to project: ")
+    # Find all git projects and add existing tmux sessions to the list
+    local projects=$(find "${existing_dirs[@]}" -maxdepth 2 -type d -name ".git" 2>/dev/null | sed 's#/\.git##')
+    local sessions=$(tmux list-sessions -F '#{session_name}:#{session_path}' 2>/dev/null)
+    
+    # Combine them, ensuring paths are absolute, and remove duplicates
+    local combined_list=$( (echo "$projects"; echo "$sessions" | awk -F: '{print $2}') | sort -u)
 
-    if [[ -n "$selected_dir" ]]; then
-        local session_name=$(basename "$selected_dir" | tr '.-' '_')
+    # Use fzf to select a project or session
+    local selected=$(echo "$combined_list" | fzf-tmux -p 80%,60% --prompt="Switch to project: " --preview 'ls -la {}')
+    
+    if [[ -n "$selected" ]]; then
+        local session_name=$(basename "$selected" | tr '.-' '_')
         
-        # Check if we are inside a tmux session
-        if [ -n "$TMUX" ]; then
-            # We are inside tmux
-            if ! tmux has-session -t="$session_name" 2>/dev/null; then
-                # Session doesn't exist, create it detached
-                tmux new-session -d -s "$session_name" -c "$selected_dir"
-            fi
-            # Switch to the session
-            tmux switch-client -t "$session_name"
-        else
-            # We are not inside tmux
-            if ! tmux has-session -t="$session_name" 2>/dev/null; then
-                # Session doesn't exist, create it and attach
-                tmux new-session -s "$session_name" -c "$selected_dir"
-            else
-                # Session exists, attach to it
+        # If we are not in tmux, just cd
+        if [[ -z "$TMUX" ]]; then
+            cd "$selected"
+            # If a session for this project exists, attach to it. Otherwise, create a new one.
+            if tmux has-session -t="$session_name" 2>/dev/null; then
                 tmux attach-session -t "$session_name"
+            else
+                tmux new-session -s "$session_name" -c "$selected"
             fi
+            return
         fi
+
+        # If we are in tmux
+        if ! tmux has-session -t="$session_name" 2>/dev/null; then
+            # Session doesn't exist, create it detached and switch to it
+            tmux new-session -d -s "$session_name" -c "$selected"
+        fi
+        # Switch to the target session
+        tmux switch-client -t "$session_name"
     fi
 }
 

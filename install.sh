@@ -103,7 +103,7 @@ install_packages() {
             packages_to_install="$packages_to_install $desktop_packages"
         fi
         sudo pacman -Syu --noconfirm --needed $packages_to_install
-    elif [ "$pkg_manager" == "apt" ]; {
+    elif [ "$pkg_manager" == "apt" ]; then
         # Helper function for apt to install only if available
         install_if_available() {
             if apt-cache show "$1" &> /dev/null; then
@@ -143,7 +143,6 @@ install_packages() {
             info "Attempting to install starship manually..."
             curl -sS https://starship.rs/install.sh | sh -s -- --yes
         fi
-    }
     fi
 }
     if [ ! -d "$HOME/.oh-my-zsh" ]; then
