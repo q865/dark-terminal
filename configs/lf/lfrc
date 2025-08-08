@@ -1,27 +1,214 @@
-# This is a minimal lfrc configuration.
+# =============================================================================
+# ENHANCED LF CONFIGURATION FOR DARK-TERMINAL
+# =============================================================================
 
-# --- Mappings ---
-# Default navigation keys (h, j, k, l) work out of the box for navigation.
-# 'l' or <enter> on a directory will enter it.
-# 'l' or <enter> on a file will try to open it.
-
-# Use 'e' to explicitly open a file for editing.
-# Forcing shell execution with a hardcoded path to ensure it always works.
-map e $sh -c '/usr/bin/nvim "$1"' -- $f
-
-# Use 'o' for 'open', which can be configured with 'rifle' or xdg-open.
-map o $open $f
-
-# --- Settings ---
+# --- CORE SETTINGS ---
 set icons true
-set hidden true
+set hidden false
 set preview true
+set drawbox true
+set color256 true
+set dircounts true
+set dirfirst true
+set globsearch true
+set ignorecase true
+set smartcase true
+set wrapscan true
+set number true
+set relativenumber true
+set info size:size:time:time:atime:atime:ctime:ctime:btime:btime:version:version
+set mousewheelup "preview-page-up"
+set mousewheeldown "preview-page-down"
+set mouseup "preview-page-up"
+set mousedown "preview-page-down"
 
-# Source a local, potentially user-defined, configuration file if it exists.
-# The install script will create this file in headless mode to disable previews.
+# --- NEOVIM INTEGRATION ---
+# Edit file in Neovim (primary editor)
+map e $nvim $f
+map E $nvim $f
+
+# Edit file in Neovim in new tab
+map t $nvim -p $f
+
+# Edit file in Neovim in vertical split
+map v $nvim -O $f
+
+# Edit file in Neovim in horizontal split
+map s $nvim -o $f
+
+# Quick edit in Neovim with specific line
+map L $nvim +$i $f
+
+# --- FILE OPERATIONS ---
+# Open file with default application
+map o $open $f
+map O $open $f
+
+# Open file with specific applications
+map mp $mpv $f
+map zp $zathura $f
+map ff $firefox $f
+map ch $chromium $f
+
+# --- NAVIGATION ENHANCEMENTS ---
+# Quick navigation
+map gh cd ~
+map gd cd ~/Downloads
+map gp cd ~/Pictures
+map gv cd ~/Videos
+map gm cd ~/Music
+map gD cd ~/Documents
+map gc cd ~/.config
+map gs cd ~/dev_projects
+
+# Parent directory navigation
+map <backspace> cd ..
+map h cd ..
+map l open
+
+# --- SEARCH AND FILTERING ---
+# Fuzzy finder integration
+map <c-f> $~/.local/bin/fzf-launcher files
+map <c-p> $~/.local/bin/fzf-launcher projects
+
+# Search in current directory
+map / $find . -name "*$1*" -type f
+map ? $find . -name "*$1*" -type d
+
+# (removed invalid fzfopts mappings)
+
+# --- FILE MANAGEMENT ---
+# Copy/Move operations
+map yy $cp $f
+map dd $mv $f
+map pp $paste
+
+# Create new file/directory
+map a $touch $1
+map A $mkdir $1
+
+# Delete operations
+map d $delete
+map D $delete!
+
+# Rename file
+map r $rename $1
+
+# --- PREVIEW ENHANCEMENTS ---
+# Toggle preview
+map zp $toggle-preview
+
+# Preview in different ways
+map pv $preview-file
+map ph $preview-here
+
+# --- TMUX INTEGRATION ---
+# Open in tmux session
+map tm $tmux-send $f
+map tM $tmux-send-all
+
+# --- GIT INTEGRATION ---
+# Git operations
+map gs $git-status
+map ga $git-add $f
+map gc $git-commit
+map gp $git-push
+map gl $git-log
+
+# --- SYSTEM INTEGRATION ---
+# Terminal operations
+map <c-t> $toggle-terminal
+map <c-z> $suspend
+
+# System operations
+map <c-l> $clear
+map <c-r> $reload
+
+# --- CUSTOM FUNCTIONS ---
+# Quick file operations
+map qf $quick-file-edit
+map qv $quick-view
+map qc $quick-copy
+
+# Development helpers
+map dev $dev-setup
+map test $run-tests
+map build $build-project
+
+# --- ADVANCED FEATURES ---
+# File comparison
+map diff $compare-files
+
+# Archive operations
+map tar $create-archive
+map untar $extract-archive
+
+# Network operations
+map wget $download-file
+map curl $fetch-url
+
+# --- KEYBOARD SHORTCUTS ---
+# Vim-like navigation
+map j  down
+map k  up
+
+# Page navigation
+map <c-d>  down-page
+map <c-u>  up-page
+map <c-b>  up-page
+
+# Jump to beginning/end
+map gg  top
+map G   bottom
+
+# Mark operations
+map m   mark
+map u   unmark
+map t   toggle
+map c   clear
+
+# --- CUSTOM COMMANDS ---
+# Define custom commands for better integration
+cmd nvim ${{ nvim "$1" }}
+cmd tmux-send ${{ tmux send-keys -t main:0.1 "nvim $1" Enter }}
+cmd tmux-send-all ${{ tmux send-keys -t main:0.1 "nvim $1" Enter }}
+cmd git-status ${{ git status }}
+cmd git-add ${{ git add "$1" }}
+cmd git-commit ${{ git commit -m "$1" }}
+cmd git-push ${{ git push }}
+cmd git-log ${{ git log --oneline }}
+cmd quick-file-edit ${{ nvim "$1" }}
+cmd quick-view ${{ bat "$1" }}
+cmd quick-copy ${{ cp "$1" "$2" }}
+cmd dev-setup ${{ tmux new-session -d -s dev && tmux send-keys -t dev "nvim ." Enter }}
+cmd run-tests ${{ npm test }}
+cmd build-project ${{ npm run build }}
+cmd compare-files ${{ diff "$1" "$2" }}
+cmd create-archive ${{ tar -czf "$1.tar.gz" "$1" }}
+cmd extract-archive ${{ tar -xzf "$1" }}
+cmd download-file ${{ wget "$1" }}
+cmd fetch-url ${{ curl "$1" }}
+
+# --- ENVIRONMENT VARIABLES ---
+# Set editor
+export EDITOR=nvim
+export VISUAL=nvim
+
+# Set pager
+export PAGER=less
+
+# --- LOCAL CONFIGURATION ---
+# Source local configuration if it exists
 if [ -f "$HOME/.config/lf/localrc" ]; then
     source "$HOME/.config/lf/localrc"
 fi
 
+<<<<<<< HEAD
 # Custom keybinding for fzf file search inside lf
 map <c-f> $sh -c '$DARK_TERMINAL_HOME/scripts/fzf-launcher.sh files'
+=======
+# --- PLUGIN SUPPORT ---
+# Load plugins if they exist
+if [ -f "$HOME/.config/lf/plugins.lf" ]; then
+    source "$HOME/.config/lf/plugins.lf"
+fi

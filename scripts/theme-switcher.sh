@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# theme-switcher.sh - A script to change the color scheme across all applications.
+# Enhanced theme-switcher.sh - A script to change the color scheme across all applications.
 # Usage: ./theme-switcher.sh [theme_name]
 #
 
@@ -109,6 +109,9 @@ main() {
     
     # Automatically sync nvim plugins
     sync_nvim_plugins
+    
+    # Reload tmux configuration
+    reload_tmux_config
 }
 
 # --- Neovim Plugin Sync Function ---
@@ -124,6 +127,89 @@ sync_nvim_plugins() {
     fi
 }
 
-# --- Main Logic ---
+# --- Tmux Configuration Reload Function ---
+reload_tmux_config() {
+    info "Reloading tmux configuration..."
+    if command -v tmux &> /dev/null; then
+        # Send reload command to all tmux sessions
+        tmux list-sessions 2>/dev/null | while read -r session; do
+            session_name=$(echo "$session" | cut -d: -f1)
+            tmux send-keys -t "$session_name" "source-file ~/.config/tmux/tmux.conf" Enter 2>/dev/null || true
+        done
+        info "Tmux configuration reloaded."
+    else
+        warn "Tmux is not in PATH. Please reload manually with 'tmux source-file ~/.config/tmux/tmux.conf'"
+    fi
+}
+
+# --- Theme Preview Function ---
+preview_theme() {
+    local theme="$1"
+    info "Previewing $theme theme..."
+    
+    case "$theme" in
+        nord)
+            echo "Nord Theme: Cool blue tones with high contrast"
+            ;;
+        catppuccin)
+            echo "Catppuccin Theme: Soothing pastel colors"
+            ;;
+        dracula)
+            echo "Dracula Theme: Dark purple and green"
+            ;;
+        tokyonight)
+            echo "Tokyo Night Theme: Deep blue and purple"
+            ;;
+        gruvbox)
+            echo "Gruvbox Theme: Warm brown and green"
+            ;;
+        everforest)
+            echo "Everforest Theme: Natural green and brown"
+            ;;
+        rosepine)
+            echo "Rosé Pine Theme: Elegant pink and blue"
+            ;;
+        *)
+            error "Unknown theme: $theme"
+            ;;
+    esac
+}
+
+# --- List Available Themes ---
+list_themes() {
+    echo "Available themes:"
+    echo "  nord       - Cool blue tones with high contrast"
+    echo "  catppuccin - Soothing pastel colors"
+    echo "  dracula    - Dark purple and green"
+    echo "  tokyonight - Deep blue and purple"
+    echo "  gruvbox    - Warm brown and green"
+    echo "  everforest - Natural green and brown"
+    echo "  rosepine   - Elegant pink and blue"
+}
+
+# --- Main Function ---
 main() {
-    if [ -z "$1" ]; then
+    case "$1" in
+        "list"|"ls")
+            list_themes
+            exit 0
+            ;;
+        "preview"|"p")
+            if [ -z "$2" ]; then
+                error "Usage: $0 preview <theme_name>"
+            fi
+            preview_theme "$2"
+            exit 0
+            ;;
+        "")
+            error "Usage: $0 [theme_name|list|preview <theme_name>]"
+            ;;
+        *)
+            main "$@"
+            ;;
+    esac
+}
+
+# --- Run the main function ---
+main "$@"
+exit 0

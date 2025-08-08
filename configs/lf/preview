@@ -1,0 +1,239 @@
+#!/bin/bash
+
+# Enhanced preview script for lf with Neovim integration
+# Usage: ./preview.sh <file_path> <width> <height>
+
+file_path="$1"
+width="$2"
+height="$3"
+
+# Get file extension
+ext="${file_path##*.}"
+filename=$(basename "$file_path")
+
+# Function to check if file is binary
+is_binary() {
+    local file="$1"
+    if [ -f "$file" ]; then
+        if file "$file" | grep -q "text"; then
+            return 1  # Not binary
+        else
+            return 0  # Binary
+        fi
+    fi
+    return 1
+}
+
+# Function to get file size in human readable format
+get_file_size() {
+    local file="$1"
+    if [ -f "$file" ]; then
+        du -h "$file" | cut -f1
+    fi
+}
+
+# Function to get file permissions
+get_file_perms() {
+    local file="$1"
+    if [ -f "$file" ]; then
+        stat -c "%A" "$file"
+    fi
+}
+
+# Function to preview text files with syntax highlighting
+preview_text() {
+    local file="$1"
+    if command -v bat &> /dev/null; then
+        bat --color=always --style=numbers --line-range=:200 "$file"
+    elif command -v highlight &> /dev/null; then
+        highlight -O ansi "$file" | head -200
+    else
+        cat "$file" | head -200
+    fi
+}
+
+# Function to preview images
+preview_image() {
+    local file="$1"
+    local w="$2"
+    local h="$3"
+    
+    if command -v chafa &> /dev/null; then
+        chafa -s "${w}x${h}" "$file"
+    elif command -v viu &> /dev/null; then
+        viu -w "$w" "$file"
+    elif command -v catimg &> /dev/null; then
+        catimg -w "$w" "$file"
+    else
+        echo "Install chafa, viu, or catimg for image preview"
+        file "$file"
+    fi
+}
+
+# Function to preview videos
+preview_video() {
+    local file="$1"
+    if command -v ffprobe &> /dev/null; then
+        echo "=== Video Information ==="
+        ffprobe -v quiet -print_format json -show_format -show_streams "$file" | jq '.format.duration, .streams[0].codec_name, .streams[0].width, .streams[0].height'
+    else
+        echo "Install ffmpeg for video preview"
+        file "$file"
+    fi
+}
+
+# Function to preview audio
+preview_audio() {
+    local file="$1"
+    if command -v ffprobe &> /dev/null; then
+        echo "=== Audio Information ==="
+        ffprobe -v quiet -print_format json -show_format "$file" | jq '.format.duration, .format.bit_rate'
+    else
+        echo "Install ffmpeg for audio preview"
+        file "$file"
+    fi
+}
+
+# Main preview logic
+case "$file_path" in
+    # Directories
+    */)
+        echo "=== Directory Contents ==="
+        if command -v eza &> /dev/null; then
+            eza -l --icons --color=always --git "$file_path"
+        elif command -v lsd &> /dev/null; then
+            lsd -l --icon=always --color=always "$file_path"
+        else
+            ls -la "$file_path"
+        fi
+        ;;
+    
+    # Archives
+    *.tar|*.tar.gz|*.tar.bz2|*.tar.xz|*.tgz|*.tbz2|*.txz)
+        echo "=== Archive Contents ==="
+        tar -tf "$file_path" | head -50
+        ;;
+    *.zip|*.jar|*.war|*.ear)
+        echo "=== Archive Contents ==="
+        unzip -l "$file_path" | head -50
+        ;;
+    *.rar)
+        echo "=== Archive Contents ==="
+        unrar l "$file_path" | head -50
+        ;;
+    *.7z)
+        echo "=== Archive Contents ==="
+        7z l "$file_path" | head -50
+        ;;
+    
+    # Documents
+    *.pdf)
+        echo "=== PDF Preview ==="
+        if command -v pdftotext &> /dev/null; then
+            pdftotext "$file_path" - | head -100
+        elif command -v mutool &> /dev/null; then
+            mutool draw -F txt "$file_path" | head -100
+        else
+            echo "Install poppler-utils or mupdf-tools for PDF preview"
+            file "$file_path"
+        fi
+        ;;
+    *.doc|*.docx)
+        echo "=== Word Document ==="
+        if command -v antiword &> /dev/null; then
+            antiword "$file_path" | head -100
+        else
+            echo "Install antiword for Word document preview"
+            file "$file_path"
+        fi
+        ;;
+    *.xlsx|*.xls|*.ods)
+        echo "=== Spreadsheet Preview ==="
+        if command -v ssconvert &> /dev/null; then
+            ssconvert --export-type=Gnumeric_stf:stf_csv "$file_path" "fd://1" | head -50
+        else
+            echo "Install gnumeric for spreadsheet preview"
+            file "$file_path"
+        fi
+        ;;
+    *.odt|*.rtf)
+        echo "=== Text Document ==="
+        if command -v pandoc &> /dev/null; then
+            pandoc -t plain "$file_path" | head -100
+        else
+            echo "Install pandoc for document preview"
+            file "$file_path"
+        fi
+        ;;
+    
+    # Images
+    *.png|*.jpg|*.jpeg|*.gif|*.webp|*.bmp|*.tiff|*.svg)
+        if [ -f "$file_path" ]; then
+            preview_image "$file_path" "$width" "$height"
+        fi
+        ;;
+    
+    # Videos
+    *.mp4|*.mkv|*.avi|*.mov|*.wmv|*.flv|*.webm|*.m4v)
+        preview_video "$file_path"
+        ;;
+    
+    # Audio
+    *.mp3|*.wav|*.flac|*.ogg|*.m4a|*.aac)
+        preview_audio "$file_path"
+        ;;
+    
+    # Code files with syntax highlighting
+    *.py|*.js|*.ts|*.jsx|*.tsx|*.html|*.css|*.scss|*.sass|*.less|*.json|*.xml|*.yaml|*.yml|*.toml|*.ini|*.cfg|*.conf|*.sh|*.bash|*.zsh|*.fish|*.lua|*.go|*.rs|*.cpp|*.c|*.h|*.hpp|*.java|*.kt|*.swift|*.php|*.rb|*.pl|*.sql|*.md|*.txt|*.log|*.csv|*.tsv)
+        if is_binary "$file_path"; then
+            echo "Binary file detected"
+            file "$file_path"
+        else
+            preview_text "$file_path"
+        fi
+        ;;
+    
+    # Binary files
+    *.exe|*.dll|*.so|*.dylib|*.bin|*.dat)
+        echo "=== Binary File ==="
+        file "$file_path"
+        echo "Size: $(get_file_size "$file_path")"
+        echo "Permissions: $(get_file_perms "$file_path")"
+        ;;
+    
+    # Default case - try to determine file type
+    *)
+        if [ -d "$file_path" ]; then
+            echo "=== Directory Contents ==="
+            if command -v eza &> /dev/null; then
+                eza -l --icons --color=always --git "$file_path"
+            elif command -v lsd &> /dev/null; then
+                lsd -l --icon=always --color=always "$file_path"
+            else
+                ls -la "$file_path"
+            fi
+        elif [ -f "$file_path" ]; then
+            if is_binary "$file_path"; then
+                echo "=== Binary File ==="
+                file "$file_path"
+                echo "Size: $(get_file_size "$file_path")"
+                echo "Permissions: $(get_file_perms "$file_path")"
+            else
+                echo "=== Text File Preview ==="
+                preview_text "$file_path"
+            fi
+        else
+            echo "File not found or not accessible"
+        fi
+        ;;
+esac
+
+# Show file information at the end
+if [ -f "$file_path" ]; then
+    echo
+    echo "=== File Information ==="
+    echo "Name: $filename"
+    echo "Size: $(get_file_size "$file_path")"
+    echo "Permissions: $(get_file_perms "$file_path")"
+    echo "Type: $(file -b "$file_path")"
+fi

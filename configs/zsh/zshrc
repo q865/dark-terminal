@@ -1,3 +1,7 @@
+# =============================================================================
+# ENHANCED ZSH CONFIGURATION FOR DARK-TERMINAL
+# =============================================================================
+
 # ------------------------------------------------------------------------------
 # OH MY ZSH CONFIGURATION
 # ------------------------------------------------------------------------------
@@ -7,7 +11,7 @@ export ZSH="$HOME/.oh-my-zsh"
 # We leave ZSH_THEME empty to allow starship to take control.
 ZSH_THEME=""
 
-# List of plugins
+# Enhanced plugin list
 plugins=(
     git
     vi-mode
@@ -15,15 +19,87 @@ plugins=(
     zsh-syntax-highlighting
     zsh-completions
     zsh-history-substring-search
-    fzf-tab # fzf-powered completions
+    fzf-tab
+    docker
+    docker-compose
+    kubectl
+    helm
+    npm
+    node
+    python
+    pip
+    virtualenv
+    poetry
+    rust
+    golang
+    terraform
+    aws
+    kubectl
+    kubectx
+    history
+    extract
+    sudo
+    copypath
+    copyfile
+    dirhistory
+    web-search
+    jsontools
+    urltools
+    colored-man-pages
+    colorize
+    command-not-found
+    debian
+    archlinux
 )
 
 # Load Oh My Zsh
 source $ZSH/oh-my-zsh.sh
 
+# ------------------------------------------------------------------------------
+# VI MODE CONFIGURATION
+# ------------------------------------------------------------------------------
+# Enhanced vi-mode settings
+bindkey -v
+export KEYTIMEOUT=1
+
 # Fix for Ctrl+C in vi-mode
-# This ensures Ctrl+C sends an interrupt signal instead of just exiting insert mode.
 bindkey -v '^C' .send-break
+
+# Enhanced vi-mode keybindings
+bindkey -M viins '^A' beginning-of-line
+bindkey -M viins '^E' end-of-line
+bindkey -M viins '^K' kill-line
+bindkey -M viins '^U' backward-kill-line
+bindkey -M viins '^W' backward-kill-word
+bindkey -M viins '^Y' yank
+
+# History search in vi-mode
+bindkey -M vicmd 'k' history-substring-search-up
+bindkey -M vicmd 'j' history-substring-search-down
+
+# ------------------------------------------------------------------------------
+# ENVIRONMENT VARIABLES
+# ------------------------------------------------------------------------------
+# Editor settings
+export EDITOR='nvim'
+export VISUAL='nvim'
+export PAGER='less'
+
+# Language settings
+export LANG='en_US.UTF-8'
+export LC_ALL='en_US.UTF-8'
+
+# Path additions
+export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.cargo/bin:$PATH"
+export PATH="$HOME/.npm-global/bin:$PATH"
+export PATH="$HOME/go/bin:$PATH"
+
+# Development tools
+export GOPATH="$HOME/go"
+export GOROOT="/usr/lib/go"
+export CARGO_HOME="$HOME/.cargo"
+export RUSTUP_HOME="$HOME/.rustup"
 
 # ------------------------------------------------------------------------------
 # PROMPT & SHELL EXTENSIONS
@@ -38,6 +114,254 @@ fi
 
 # direnv: per-project environments
 eval "$(direnv hook zsh)"
+
+# fzf configuration
+export FZF_DEFAULT_OPTS="--height 40% --layout=reverse --border --preview 'bat --color=always --style=numbers --line-range=:500 {}'"
+export FZF_DEFAULT_COMMAND="fd --type f --hidden --follow --exclude .git --exclude node_modules --exclude .cache"
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export FZF_ALT_C_COMMAND="fd --type d --hidden --follow --exclude .git --exclude node_modules --exclude .cache"
+
+# ------------------------------------------------------------------------------
+# HISTORY CONFIGURATION
+# ------------------------------------------------------------------------------
+# Enhanced history settings
+HISTFILE="$HOME/.zsh_history"
+HISTSIZE=100000
+SAVEHIST=100000
+setopt SHARE_HISTORY
+setopt EXTENDED_HISTORY
+setopt HIST_EXPIRE_DUPS_FIRST
+setopt HIST_IGNORE_DUPS
+setopt HIST_IGNORE_SPACE
+setopt HIST_VERIFY
+setopt HIST_REDUCE_BLANKS
+setopt HIST_SAVE_NO_DUPS
+setopt HIST_FIND_NO_DUPS
+
+# ------------------------------------------------------------------------------
+# COMPLETION CONFIGURATION
+# ------------------------------------------------------------------------------
+# Enhanced completion settings
+autoload -U compinit
+compinit -d ~/.cache/zsh/.zcompdump
+
+# Completion menu
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*' rehash true
+
+# ------------------------------------------------------------------------------
+# ALIASES AND FUNCTIONS
+# ------------------------------------------------------------------------------
+# Enhanced aliases
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+alias .....='cd ../../../..'
+
+# Git aliases
+alias g='git'
+alias ga='git add'
+alias gaa='git add --all'
+alias gc='git commit -m'
+alias gca='git commit -a -m'
+alias gp='git push'
+alias gpl='git pull'
+alias gco='git checkout'
+alias gcb='git checkout -b'
+alias gb='git branch'
+alias gbd='git branch -d'
+alias gbD='git branch -D'
+alias gl='git log --oneline --graph --decorate'
+alias glg='git log --graph --oneline --decorate --all'
+alias gst='git status'
+alias gd='git diff'
+alias gdc='git diff --cached'
+alias grh='git reset HEAD'
+alias grhh='git reset HEAD --hard'
+alias grb='git rebase'
+alias grbi='git rebase -i'
+alias grba='git rebase --abort'
+alias grbc='git rebase --continue'
+alias grbs='git rebase --skip'
+
+# Docker aliases
+alias d='docker'
+alias dc='docker-compose'
+alias dps='docker ps'
+alias dpsa='docker ps -a'
+alias di='docker images'
+alias dex='docker exec -it'
+alias dlog='docker logs'
+alias dlogf='docker logs -f'
+
+# Kubernetes aliases
+alias k='kubectl'
+alias kg='kubectl get'
+alias kd='kubectl describe'
+alias kl='kubectl logs'
+alias kex='kubectl exec -it'
+alias kctx='kubectx'
+alias kns='kubens'
+
+# Development aliases
+alias n='npm'
+alias nr='npm run'
+alias ni='npm install'
+alias nid='npm install --save-dev'
+alias y='yarn'
+alias yr='yarn run'
+alias yi='yarn install'
+alias p='python'
+alias pip='python -m pip'
+alias py='python'
+alias py3='python3'
+alias c='cargo'
+alias cr='cargo run'
+alias cb='cargo build'
+alias ct='cargo test'
+alias cf='cargo fmt'
+alias cc='cargo check'
+alias go='go'
+alias gor='go run'
+alias gob='go build'
+alias got='go test'
+
+# System aliases
+alias update='sudo pacman -Syu'
+alias upgrade='sudo pacman -Syu'
+alias install='sudo pacman -S'
+alias remove='sudo pacman -R'
+alias search='sudo pacman -Ss'
+alias info='sudo pacman -Si'
+alias orphans='sudo pacman -Rns $(pacman -Qtdq)'
+alias cleanup='sudo pacman -Sc'
+
+# Network aliases
+alias myip='curl ifconfig.me'
+alias pingg='ping 8.8.8.8'
+alias ports='netstat -tulanp'
+alias listen='netstat -tulanp | grep LISTEN'
+
+# File management aliases
+alias cp='cp -i'
+alias mv='mv -i'
+alias rm='rm -i'
+alias mkdir='mkdir -p'
+alias df='df -h'
+alias du='du -h'
+alias free='free -h'
+
+# ------------------------------------------------------------------------------
+# CUSTOM FUNCTIONS
+# ------------------------------------------------------------------------------
+# Function to create and navigate to directory
+mkcd() {
+    mkdir -p "$1" && cd "$1"
+}
+
+# Function to extract any archive
+extract() {
+    if [ -f $1 ] ; then
+        case $1 in
+            *.tar.bz2)   tar xjf $1     ;;
+            *.tar.gz)    tar xzf $1     ;;
+            *.bz2)       bunzip2 $1     ;;
+            *.rar)       unrar e $1     ;;
+            *.gz)        gunzip $1      ;;
+            *.tar)       tar xf $1      ;;
+            *.tbz2)      tar xjf $1     ;;
+            *.tgz)       tar xzf $1     ;;
+            *.zip)       unzip $1       ;;
+            *.Z)         uncompress $1  ;;
+            *.7z)        7z x $1        ;;
+            *)           echo "'$1' cannot be extracted via extract()" ;;
+        esac
+    else
+        echo "'$1' is not a valid file"
+    fi
+}
+
+# Function to create backup
+backup() {
+    cp "$1" "$1.backup.$(date +%Y%m%d_%H%M%S)"
+}
+
+# Function to find and replace in files
+findreplace() {
+    find . -type f -name "$1" -exec sed -i "s/$2/$3/g" {} \;
+}
+
+# Function to show process tree
+pst() {
+    ps auxf | grep -v grep | grep "$1" --color=auto
+}
+
+# Function to kill process by name
+killp() {
+    pkill -f "$1"
+}
+
+# Function to show directory size
+ds() {
+    du -sh "$1" 2>/dev/null || du -sh . 2>/dev/null
+}
+
+# Function to show top directories by size
+topdirs() {
+    du -h . | sort -hr | head -10
+}
+
+# Function to show git status for all repos
+gitall() {
+    for d in */; do
+        if [ -d "$d/.git" ]; then
+            echo "=== $d ==="
+            cd "$d"
+            git status --porcelain
+            cd ..
+        fi
+    done
+}
+
+# Function to update all git repos
+gitupdate() {
+    for d in */; do
+        if [ -d "$d/.git" ]; then
+            echo "=== Updating $d ==="
+            cd "$d"
+            git pull
+            cd ..
+        fi
+    done
+}
+
+# Function to create development environment
+devsetup() {
+    local project_name="$1"
+    if [ -z "$project_name" ]; then
+        echo "Usage: devsetup <project_name>"
+        return 1
+    fi
+    
+    mkdir -p "$project_name"
+    cd "$project_name"
+    
+    # Initialize git
+    git init
+    
+    # Create common directories
+    mkdir -p src tests docs scripts
+    
+    # Create common files
+    touch README.md .gitignore
+    
+    echo "Development environment created for $project_name"
+}
 
 # ------------------------------------------------------------------------------
 # AUTO-START & FINALIZATION
@@ -59,3 +383,30 @@ fi
 
 # Load dark-terminal aliases and functions
 source '/home/panch/dev_projects/dark-terminal/scripts/aliases.sh'
+
+# ------------------------------------------------------------------------------
+# FINAL SETTINGS
+# ------------------------------------------------------------------------------
+# Disable flow control commands (keeps C-s from freezing everything)
+stty -ixon
+
+# Enable color support
+autoload -U colors && colors
+
+# Enable word splitting
+setopt AUTO_CD
+setopt EXTENDED_GLOB
+setopt NOTIFY
+setopt PROMPT_SUBST
+
+# Better directory navigation
+setopt AUTO_PUSHD
+setopt PUSHD_IGNORE_DUPS
+setopt PUSHD_MINUS
+
+# Better job control
+setopt AUTO_CONTINUE
+setopt CHECK_JOBS
+setopt LONG_LIST_JOBS
+
+echo "Enhanced zsh configuration loaded."

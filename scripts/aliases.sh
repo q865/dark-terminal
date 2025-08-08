@@ -119,7 +119,7 @@ alias glg='git log --graph --oneline --decorate --all'
 # FUNCTIONS & FZF BINDINGS
 # ------------------------------------------------------------------------------
 # lf - file manager wrapper to cd on exit
-f () {
+lf_cd () {
     tmp="$(mktemp)"
     command lf -last-dir-path="$tmp" "$@"
     if [ -f "$tmp" ]; then
@@ -132,7 +132,7 @@ f () {
 }
 
 # Get the directory of the currently running script using the environment variable
-SCRIPT_DIR="$DARK_TERMINAL_HOME/scripts"
+SCRIPT_DIR="${DARK_TERMINAL_HOME:-/home/panch/dev_projects/dark-terminal}/scripts"
 FZF_LAUNCHER_PATH="$SCRIPT_DIR/fzf-launcher.sh"
 
 # Use bat for fzf previews, but only if the target is a file
@@ -165,3 +165,6 @@ elif [ -n "$BASH_VERSION" ]; then
 fi
 
 echo "dark-terminal aliases and functions loaded."
+
+# Load enhanced lf aliases and functions
+source "$SCRIPT_DIR/lf-aliases.sh"
